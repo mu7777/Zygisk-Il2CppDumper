@@ -1,0 +1,36 @@
+name: Build Zygisk Il2CppDumper
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: 'Game package name (例: com.example.game)'
+        required: true
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v3
+
+      - name: JDK 17 をセットアップ
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: ゲームパッケージ名を game.h に書き込む
+        run: |
+          sed -i 's|GamePackageName = ".*"|GamePackageName = "${{ github.event.inputs.package_name }}"|' module/src/main/cpp/game.h
+
+      - name: ビルド実行
+        run: ./gradlew :module:assembleRelease
+
+      - name: zip ファイルをアップロード
+        uses: actions/upload-artifact@v3
+        with:
+          name: Zygisk-Il2CppDumper
+          path: out/*.zip
